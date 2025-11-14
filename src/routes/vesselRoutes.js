@@ -10,6 +10,13 @@ const vesselController = require('../controllers/vesselController');
 router.post('/fetch', vesselController.fetchAndStorePositions);
 
 /**
+ * @route   GET /api/vessels/fetch-export
+ * @desc    Fetch export vessels from MarineTraffic API and store in database (GET endpoint for browser access)
+ * @access  Public
+ */
+router.get('/fetch-export', vesselController.fetchAndStoreExportVessels);
+
+/**
  * @route   GET /api/vessels/positions
  * @desc    Get all vessel positions (history) with optional filters
  * @access  Public
@@ -34,6 +41,14 @@ router.get('/latest', vesselController.getLatestPositions);
 router.get('/mmsi/:mmsi', vesselController.getPositionsByMMSI);
 
 /**
+ * @route   GET /api/vessels/geojson
+ * @desc    Get vessel positions as GeoJSON format
+ * @access  Public
+ * @query   limit, offset, mmsi, startDate, endDate
+ */
+router.get('/geojson', vesselController.getPositionsAsGeoJSON);
+
+/**
  * @route   GET /api/vessels
  * @desc    Get all vessels (current state with name)
  * @access  Public
@@ -44,6 +59,7 @@ router.get('/', vesselController.getAllVessels);
  * @route   GET /api/vessels/:id
  * @desc    Get a single vessel position by ID
  * @access  Public
+ * @note    This route must be last to avoid conflicts with other routes
  */
 router.get('/:id', vesselController.getPositionById);
 

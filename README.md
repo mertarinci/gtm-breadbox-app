@@ -6,7 +6,6 @@ Node.js Express application for fetching and managing vessel positions from Mari
 
 - 🚢 Fetch vessel positions from MarineTraffic API
 - 💾 Store positions in PostgreSQL (Neon)
-- 📦 Mock data support for development (to avoid API rate limits)
 - 🔍 Query vessel positions with filters (MMSI, date range, etc.)
 - 📊 Get latest positions for all vessels
 - 🏗️ Production-ready architecture
@@ -25,7 +24,7 @@ gtm-breadbox-app/
 │   ├── routes/
 │   │   └── vesselRoutes.js      # API routes
 │   ├── services/
-│   │   └── marineTrafficService.js  # API service & mock data
+│   │   └── marineTrafficService.js  # API service
 │   ├── middleware/
 │   │   └── errorHandler.js      # Error handling
 │   ├── app.js                   # Express app setup
@@ -120,15 +119,6 @@ curl http://localhost:3000/api/vessels/latest
 ```bash
 curl http://localhost:3000/api/vessels/mmsi/577193000
 ```
-
-## Mock Data
-
-The application uses mock data by default (when `USE_MOCK_DATA=true` or no API key is provided). This is useful for development since the MarineTraffic API has rate limits (1 request per hour).
-
-To use real API data:
-
-1. Set `USE_MOCK_DATA=false` in `.env`
-2. Add your `MARINETRAFFIC_API_KEY` to `.env`
 
 ## Database Schema
 

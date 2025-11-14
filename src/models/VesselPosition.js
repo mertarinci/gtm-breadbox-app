@@ -189,11 +189,11 @@ class VesselPosition {
 
     static async getLatestPositions(limit = 50) {
         const query = `
-      SELECT DISTINCT ON (mmsi) *
-      FROM vessel_positions
-      ORDER BY mmsi, timestamp DESC
-      LIMIT $1
-    `;
+            SELECT DISTINCT ON (mmsi) *
+            FROM vessel_positions
+            ORDER BY mmsi, timestamp DESC
+            LIMIT $1
+        `;
         const result = await pool.query(query, [limit]);
         return result.rows;
     }

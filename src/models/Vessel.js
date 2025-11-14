@@ -37,6 +37,15 @@ class Vessel {
         const result = await pool.query(query, [mmsi]);
         return result.rows[0];
     }
+
+    static async findByMMSIList(mmsiList) {
+        if (!Array.isArray(mmsiList) || mmsiList.length === 0) {
+            return [];
+        }
+        const query = 'SELECT * FROM vessels WHERE mmsi = ANY($1::text[]) ORDER BY mmsi';
+        const result = await pool.query(query, [mmsiList]);
+        return result.rows;
+    }
 }
 
 module.exports = Vessel;

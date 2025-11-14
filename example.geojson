@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Vessel",
+        "mmsi": "1234567890",
+        "speed": 10,
+        "heading": 10,
+        "course": 10,
+        "status": 10,
+        "timestamp": "2021-01-01T00:00:00Z"
+      },
+      "geometry": {
+        "coordinates": [
+          [2.176311899677046, -4.711462039395101],
+          [-35.44580382448254, 24.277514603975774],
+          [4.3567584017458785, 50.03015906861148]
+        ],
+        "type": "LineString"
+      }
+    }
+  ]
+}

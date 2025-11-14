@@ -1,39 +1,6 @@
 const axios = require('axios');
 require('dotenv').config();
 
-// Dummy data generator for development/testing
-const generateDummyData = () => {
-    const baseData = {
-        MMSI: "577193000",
-        LAT: "21.209629",
-        LON: "-17.462400",
-        SPEED: "99",
-        HEADING: "181",
-        COURSE: "184",
-        STATUS: "0",
-        TIMESTAMP: new Date().toISOString().split('.')[0],
-    };
-
-    // Generate multiple vessels with slight variations
-    const vessels = [baseData];
-
-    // Generate additional dummy vessels
-    for (let i = 1; i < 5; i++) {
-        vessels.push({
-            MMSI: String(577193000 + i),
-            LAT: (parseFloat(baseData.LAT) + (Math.random() - 0.5) * 10).toFixed(6),
-            LON: (parseFloat(baseData.LON) + (Math.random() - 0.5) * 10).toFixed(6),
-            SPEED: String(Math.floor(Math.random() * 100)),
-            HEADING: String(Math.floor(Math.random() * 360)),
-            COURSE: String(Math.floor(Math.random() * 360)),
-            STATUS: String(Math.floor(Math.random() * 15)),
-            TIMESTAMP: new Date().toISOString().split('.')[0],
-        });
-    }
-
-    return vessels;
-};
-
 class MarineTrafficService {
     constructor() {
         this.apiKey = process.env.MARINETRAFFIC_API_KEY;
@@ -41,18 +8,17 @@ class MarineTrafficService {
         // Use full URL if provided, otherwise construct from API key
         this.exportVesselsUrl = process.env.MARINETRAFFIC_EXPORTVESSELS_URL ||
             (this.apiKey ? `${this.baseUrl}/exportvessels/${this.apiKey}?protocol=json` : null);
-        this.useMock = process.env.USE_MOCK_DATA === 'true' || (!this.exportVesselsUrl && !this.apiKey);
     }
 
     /**
-     * Fetch vessel positions from MarineTraffic API or return mock data
+     * Fetch vessel positions from MarineTraffic API
      * @param {Object} params - Query parameters (mmsi, timespan, etc.)
      * @returns {Promise<Array>} Array of vessel position data
+     * @throws {Error} If API key is missing or request fails
      */
     async fetchVesselPositions(params = {}) {
-        if (this.useMock) {
-            console.log('📦 Using mock data for vessel positions');
-            return this.getMockData();
+        if (!this.apiKey) {
+            throw new Error('MARINETRAFFIC_API_KEY is required');
         }
 
         try {
@@ -73,21 +39,23 @@ class MarineTrafficService {
             return response.data;
         } catch (error) {
             console.error('❌ Error fetching from MarineTraffic API:', error.message);
-
-            // Fallback to mock data on error
-            console.log('📦 Falling back to mock data');
-            return this.getMockData();
+            if (error.response) {
+                console.error(`   Status: ${error.response.status}`);
+                console.error(`   Data:`, error.response.data);
+            }
+            throw error;
         }
     }
 
     /**
      * Fetch current vessels snapshot from exportvessels endpoint
      * Uses full URL from .env if provided, otherwise constructs from API key
+     * @returns {Promise<Array>} Array of vessel data
+     * @throws {Error} If URL is missing or request fails
      */
     async fetchExportVessels() {
-        if (this.useMock || !this.exportVesselsUrl) {
-            console.log('📦 Using mock export vessels data');
-            return this.getMockData();
+        if (!this.exportVesselsUrl) {
+            throw new Error('MARINETRAFFIC_EXPORTVESSELS_URL or MARINETRAFFIC_API_KEY is required');
         }
 
         try {
@@ -111,8 +79,7 @@ class MarineTrafficService {
                 console.error(`   Status: ${error.response.status}`);
                 console.error(`   Data:`, error.response.data);
             }
-            console.log('📦 Falling back to mock data');
-            return this.getMockData();
+            throw error;
         }
     }
 
@@ -133,14 +100,7 @@ class MarineTrafficService {
     }
 
     /**
-     * Get mock/dummy data
-     */
-    getMockData() {
-        return generateDummyData();
-    }
-
-    /**
-     * Normalize data format from API/mock to database format
+     * Normalize data format from API to database format
      */
     normalizeData(apiData) {
         return {

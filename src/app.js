@@ -54,6 +54,7 @@ app.get('/', (req, res) => {
             health: '/health',
             vessels: '/api/vessels',
             fetchPositions: '/api/vessels/fetch',
+            fetchExport: '/api/vessels/fetch-export',
             latestPositions: '/api/vessels/latest',
         },
     });

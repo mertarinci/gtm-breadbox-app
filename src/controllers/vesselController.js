@@ -7,7 +7,7 @@ const marineTrafficService = require('../services/marineTrafficService');
  */
 const fetchAndStorePositions = async (req, res) => {
     try {
-        // Fetch positions from MarineTraffic API (or mock)
+        // Fetch positions from MarineTraffic API
         const apiData = await marineTrafficService.fetchVesselPositions(req.query);
 
         if (!Array.isArray(apiData) || apiData.length === 0) {
@@ -218,11 +218,128 @@ const getPositionById = async (req, res) => {
     }
 };
 
+/**
+ * Fetch export vessels from MarineTraffic API and store in database (GET endpoint)
+ */
+const fetchAndStoreExportVessels = async (req, res) => {
+    try {
+        // Fetch vessels from MarineTraffic exportvessels endpoint
+        const apiData = await marineTrafficService.fetchExportVessels();
+
+        if (!Array.isArray(apiData) || apiData.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No vessel data found',
+            });
+        }
+
+        // Normalize and store in database
+        const normalizedData = apiData.map((item) =>
+            marineTrafficService.normalizeData(item)
+        );
+
+        const saved = await VesselPosition.createMany(normalizedData);
+
+        // Upsert current state into vessels table
+        await Promise.all(
+            normalizedData.map((d) =>
+                Vessel.upsertByMMSI({
+                    mmsi: d.mmsi,
+                    lat: d.lat,
+                    lon: d.lon,
+                    speed: d.speed,
+                    heading: d.heading,
+                    course: d.course,
+                    status: d.status,
+                    timestamp: d.timestamp,
+                })
+            )
+        );
+
+        res.status(200).json({
+            success: true,
+            message: `Successfully fetched and stored ${saved} vessels`,
+            data: {
+                count: saved,
+                vessels: normalizedData.slice(0, 10), // Return first 10 as sample
+            },
+        });
+    } catch (error) {
+        console.error('Error in fetchAndStoreExportVessels:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching and storing vessels',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        });
+    }
+};
+
+/**
+ * Get vessel positions as GeoJSON from vessels table (current/latest positions)
+ */
+const getPositionsAsGeoJSON = async (req, res) => {
+    try {
+        const { mmsi } = req.query;
+
+        // Get all vessels from database (current state)
+        let vessels;
+        if (mmsi) {
+            // If specific MMSI requested, get that vessel
+            const vessel = await Vessel.findByMMSI(mmsi);
+            vessels = vessel ? [vessel] : [];
+        } else {
+            // Get all vessels
+            vessels = await Vessel.findAll();
+        }
+
+        // Create GeoJSON features - each vessel is a Point
+        const features = vessels.map((vessel) => {
+            // Get name, use default if empty
+            const vesselName = vessel?.name && vessel.name.trim() !== ''
+                ? vessel.name
+                : "Breadbox Vessel";
+
+            return {
+                type: "Feature",
+                properties: {
+                    name: vesselName,
+                    mmsi: vessel.mmsi,
+                    speed: vessel.speed,
+                    heading: vessel.heading,
+                    course: vessel.course,
+                    status: vessel.status,
+                    timestamp: vessel.last_seen ? new Date(vessel.last_seen).toISOString() : null,
+                },
+                geometry: {
+                    type: "Point",
+                    coordinates: [vessel.lon, vessel.lat] // GeoJSON standard: [lon, lat]
+                }
+            };
+        });
+
+        const geoJSON = {
+            type: "FeatureCollection",
+            features: features
+        };
+
+        res.status(200).json(geoJSON);
+    } catch (error) {
+        console.error('Error in getPositionsAsGeoJSON:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching vessel positions as GeoJSON',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        });
+    }
+};
+
 module.exports = {
     fetchAndStorePositions,
+    fetchAndStoreExportVessels,
     getAllVessels,
     getAllPositions,
     getLatestPositions,
     getPositionsByMMSI,
     getPositionById,
+    getPositionsAsGeoJSON, // Add this
 };
