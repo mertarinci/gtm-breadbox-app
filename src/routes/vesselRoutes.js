@@ -56,6 +56,13 @@ router.get('/geojson', vesselController.getPositionsAsGeoJSON);
 router.get('/', vesselController.getAllVessels);
 
 /**
+ * @route   PUT /api/vessels/:mmsi
+ * @desc    Update a vessel by MMSI
+ * @access  Public
+ */
+router.put('/:mmsi', vesselController.updateVessel);
+
+/**
  * @route   GET /api/vessels/:id
  * @desc    Get a single vessel position by ID
  * @access  Public

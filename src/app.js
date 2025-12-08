@@ -1,7 +1,8 @@
 const express = require('express');
-const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 // Import routes
@@ -9,17 +10,18 @@ const vesselRoutes = require('./routes/vesselRoutes');
 
 // Import middleware
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { requireAuth, login } = require('./middleware/auth');
 
 const app = express();
 
 // Security middleware
-app.use(helmet());
+const isDevelopment = process.env.NODE_ENV !== 'production';
+if (!isDevelopment) {
+    app.use(helmet());
+}
 
-// CORS configuration
-app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
-    credentials: true,
-}));
+// Cookie parser middleware
+app.use(cookieParser());
 
 // Body parser middleware
 app.use(express.json());
@@ -41,7 +43,14 @@ app.get('/health', (req, res) => {
     });
 });
 
-// API routes
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.post('/edit-vessels/login', login);
+app.get('/edit-vessels/login', requireAuth);
+app.get('/edit-vessels', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'edit-vessels.html'));
+});
+
 app.use('/api/vessels', vesselRoutes);
 
 // Root endpoint
@@ -56,6 +65,7 @@ app.get('/', (req, res) => {
             fetchPositions: '/api/vessels/fetch',
             fetchExport: '/api/vessels/fetch-export',
             latestPositions: '/api/vessels/latest',
+
         },
     });
 });

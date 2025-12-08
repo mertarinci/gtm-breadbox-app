@@ -65,11 +65,16 @@ const getAllVessels = async (req, res) => {
     try {
         const vessels = await Vessel.findAll();
 
+        const normalizedVessels = vessels.map(vessel => ({
+            ...vessel,
+            isActive: vessel.isActive !== null && vessel.isActive !== undefined ? Boolean(vessel.isActive) : true
+        }));
+
         res.status(200).json({
             success: true,
             data: {
-                vessels,
-                count: vessels.length,
+                vessels: normalizedVessels,
+                count: normalizedVessels.length,
             },
         });
     } catch (error) {
@@ -256,12 +261,23 @@ const fetchAndStoreExportVessels = async (req, res) => {
             )
         );
 
+        // Set all vessels to inactive first
+        const deactivatedCount = await Vessel.setAllInactive();
+
+        // Get MMSI list from normalized data
+        const mmsiList = normalizedData.map(d => d.mmsi);
+
+        // Set only the fetched vessels to active
+        const activatedCount = await Vessel.setActiveByMMSIList(mmsiList);
+
         res.status(200).json({
             success: true,
             message: `Successfully fetched and stored ${saved} vessels`,
             data: {
                 count: saved,
                 vessels: normalizedData.slice(0, 10), // Return first 10 as sample
+                deactivated: deactivatedCount,
+                activated: activatedCount,
             },
         });
     } catch (error) {
@@ -309,6 +325,8 @@ const getPositionsAsGeoJSON = async (req, res) => {
                     course: vessel.course,
                     status: vessel.status,
                     timestamp: vessel.last_seen ? new Date(vessel.last_seen).toISOString() : null,
+                    image: vessel.image,
+                    isActive: vessel.isActive === true || vessel.isactive === true,
                 },
                 geometry: {
                     type: "Point",
@@ -333,6 +351,46 @@ const getPositionsAsGeoJSON = async (req, res) => {
     }
 };
 
+const updateVessel = async (req, res) => {
+    try {
+        const { mmsi } = req.params;
+        let { name, image, isActive } = req.body;
+
+        if (!mmsi) {
+            return res.status(400).json({
+                success: false,
+                message: 'MMSI is required',
+            });
+        }
+
+        if (isActive !== undefined) {
+            isActive = Boolean(isActive);
+        }
+
+        const vessel = await Vessel.updateByMMSI(mmsi, { name, image, isActive });
+
+        if (!vessel) {
+            return res.status(404).json({
+                success: false,
+                message: 'Vessel not found',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Vessel updated successfully',
+            data: vessel,
+        });
+    } catch (error) {
+        console.error('Error in updateVessel:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating vessel',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        });
+    }
+};
+
 module.exports = {
     fetchAndStorePositions,
     fetchAndStoreExportVessels,
@@ -341,5 +399,6 @@ module.exports = {
     getLatestPositions,
     getPositionsByMMSI,
     getPositionById,
-    getPositionsAsGeoJSON, // Add this
+    getPositionsAsGeoJSON,
+    updateVessel,
 };

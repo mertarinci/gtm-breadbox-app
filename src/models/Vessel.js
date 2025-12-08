@@ -46,6 +46,65 @@ class Vessel {
         const result = await pool.query(query, [mmsiList]);
         return result.rows;
     }
+
+    static async updateByMMSI(mmsi, data) {
+        const { name, image, isActive } = data;
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (name !== undefined) {
+            updates.push(`name = $${paramCount++}`);
+            values.push(name);
+        }
+        if (image !== undefined) {
+            updates.push(`image = $${paramCount++}`);
+            values.push(image);
+        }
+        if (isActive !== undefined) {
+            updates.push(`isActive = $${paramCount++}`);
+            values.push(isActive);
+        }
+
+        if (updates.length === 0) {
+            return await this.findByMMSI(mmsi);
+        }
+
+        values.push(mmsi);
+        const query = `
+            UPDATE vessels 
+            SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+            WHERE mmsi = $${paramCount}
+            RETURNING *
+        `;
+        const result = await pool.query(query, values);
+        return result.rows[0];
+    }
+
+    static async setAllInactive() {
+        const query = `
+            UPDATE vessels 
+            SET isActive = false, updated_at = CURRENT_TIMESTAMP
+            WHERE isActive = true
+            RETURNING mmsi
+        `;
+        const result = await pool.query(query);
+        return result.rows.length;
+    }
+
+    static async setActiveByMMSIList(mmsiList) {
+        if (!Array.isArray(mmsiList) || mmsiList.length === 0) {
+            return 0;
+        }
+        const query = `
+            UPDATE vessels 
+            SET isActive = true, updated_at = CURRENT_TIMESTAMP
+            WHERE mmsi = ANY($1::text[])
+            RETURNING mmsi
+        `;
+        const result = await pool.query(query, [mmsiList]);
+        return result.rows.length;
+    }
 }
 
 module.exports = Vessel;
