@@ -24,7 +24,7 @@ const initializeDatabase = async () => {
         mmsi VARCHAR(50) PRIMARY KEY,
         name VARCHAR(255) DEFAULT 'Vessel',
         image TEXT,
-        isActive BOOLEAN DEFAULT true,
+        isactive BOOLEAN DEFAULT true,
         lat DECIMAL(10, 8),
         lon DECIMAL(11, 8),
         speed INTEGER,
@@ -39,7 +39,7 @@ const initializeDatabase = async () => {
       CREATE INDEX IF NOT EXISTS idx_vessels_last_seen ON vessels(last_seen);
       
       ALTER TABLE vessels ADD COLUMN IF NOT EXISTS image TEXT;
-      ALTER TABLE vessels ADD COLUMN IF NOT EXISTS isActive BOOLEAN DEFAULT true;
+      ALTER TABLE vessels ADD COLUMN IF NOT EXISTS isactive BOOLEAN DEFAULT true;
 
       CREATE TABLE IF NOT EXISTS vessel_positions (
         id SERIAL PRIMARY KEY,

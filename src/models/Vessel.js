@@ -48,7 +48,7 @@ class Vessel {
     }
 
     static async updateByMMSI(mmsi, data) {
-        const { name, image, isActive } = data;
+        const { name, image, isactive } = data;
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -61,9 +61,9 @@ class Vessel {
             updates.push(`image = $${paramCount++}`);
             values.push(image);
         }
-        if (isActive !== undefined) {
-            updates.push(`isActive = $${paramCount++}`);
-            values.push(isActive);
+        if (isactive !== undefined) {
+            updates.push(`isactive = $${paramCount++}`);
+            values.push(isactive);
         }
 
         if (updates.length === 0) {
@@ -84,8 +84,8 @@ class Vessel {
     static async setAllInactive() {
         const query = `
             UPDATE vessels 
-            SET isActive = false, updated_at = CURRENT_TIMESTAMP
-            WHERE isActive = true
+            SET isactive = false, updated_at = CURRENT_TIMESTAMP
+            WHERE isactive = true
             RETURNING mmsi
         `;
         const result = await pool.query(query);
@@ -98,7 +98,7 @@ class Vessel {
         }
         const query = `
             UPDATE vessels 
-            SET isActive = true, updated_at = CURRENT_TIMESTAMP
+            SET isactive = true, updated_at = CURRENT_TIMESTAMP
             WHERE mmsi = ANY($1::text[])
             RETURNING mmsi
         `;

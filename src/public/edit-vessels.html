@@ -408,7 +408,7 @@
                         </td>
                         <td>
                             <label class="status-toggle">
-                                <input type="checkbox" id="isActive-${vessel.mmsi}" ${vessel.isActive === true || vessel.isactive === true ? 'checked' : ''} onchange="toggleActive('${vessel.mmsi}')" />
+                                <input type="checkbox" id="isactive-${vessel.mmsi}" ${vessel.isactive === true || vessel.isactive === true ? 'checked' : ''} onchange="toggleActive('${vessel.mmsi}')" />
                                 <span class="status-slider"></span>
                             </label>
                         </td>
@@ -438,7 +438,7 @@
 
         async function toggleActive(mmsi) {
             try {
-                const isActive = document.getElementById(`isActive-${mmsi}`).checked;
+                const isactive = document.getElementById(`isactive-${mmsi}`).checked;
                 const vessel = vessels.find(v => v.mmsi === mmsi);
 
                 if (!vessel) {
@@ -457,7 +457,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ name, image, isActive }),
+                    body: JSON.stringify({ name, image, isactive }),
                 });
 
                 const data = await response.json();
@@ -467,22 +467,22 @@
                     if (index !== -1) {
                         vessels[index] = data.data;
                     }
-                    showToast(`Vessel ${isActive ? 'activated' : 'deactivated'} successfully`, 'success');
+                    showToast(`Vessel ${isactive ? 'activated' : 'deactivated'} successfully`, 'success');
                 } else {
                     showToast(data.message || 'Failed to update vessel', 'error');
-                    const checkbox = document.getElementById(`isActive-${mmsi}`);
+                    const checkbox = document.getElementById(`isactive-${mmsi}`);
                     if (checkbox) {
                         const vessel = vessels.find(v => v.mmsi === mmsi);
-                        checkbox.checked = vessel && (vessel.isActive === true || vessel.isactive === true);
+                        checkbox.checked = vessel && (vessel.isactive === true || vessel.isactive === true);
                     }
                 }
             } catch (error) {
                 showToast('Error updating vessel', 'error');
                 console.error(error);
-                const checkbox = document.getElementById(`isActive-${mmsi}`);
+                const checkbox = document.getElementById(`isactive-${mmsi}`);
                 if (checkbox) {
                     const vessel = vessels.find(v => v.mmsi === mmsi);
-                    checkbox.checked = vessel && (vessel.isActive === true || vessel.isactive === true);
+                    checkbox.checked = vessel && (vessel.isactive === true || vessel.isactive === true);
                 }
             }
         }
@@ -491,14 +491,14 @@
             try {
                 const name = document.getElementById(`name-${mmsi}`).value;
                 const image = document.getElementById(`image-${mmsi}`).value;
-                const isActive = document.getElementById(`isActive-${mmsi}`).checked;
+                const isactive = document.getElementById(`isactive-${mmsi}`).checked;
 
                 const response = await fetch(`/api/vessels/${mmsi}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ name, image, isActive }),
+                    body: JSON.stringify({ name, image, isactive }),
                 });
 
                 const data = await response.json();

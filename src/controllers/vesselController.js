@@ -67,7 +67,8 @@ const getAllVessels = async (req, res) => {
 
         const normalizedVessels = vessels.map(vessel => ({
             ...vessel,
-            isActive: vessel.isActive !== null && vessel.isActive !== undefined ? Boolean(vessel.isActive) : true
+            // isactive: vessel.isactive !== null && vessel.isactive !== undefined ? Boolean(vessel.isactive) : true
+
         }));
 
         res.status(200).json({
@@ -326,7 +327,7 @@ const getPositionsAsGeoJSON = async (req, res) => {
                     status: vessel.status,
                     timestamp: vessel.last_seen ? new Date(vessel.last_seen).toISOString() : null,
                     image: vessel.image,
-                    isActive: vessel.isActive === true,
+                    isactive: vessel.isactive === true,
                 },
                 geometry: {
                     type: "Point",
@@ -354,7 +355,7 @@ const getPositionsAsGeoJSON = async (req, res) => {
 const updateVessel = async (req, res) => {
     try {
         const { mmsi } = req.params;
-        let { name, image, isActive } = req.body;
+        let { name, image, isactive } = req.body;
 
         if (!mmsi) {
             return res.status(400).json({
@@ -363,11 +364,11 @@ const updateVessel = async (req, res) => {
             });
         }
 
-        if (isActive !== undefined) {
-            isActive = Boolean(isActive);
+        if (isactive !== undefined) {
+            isactive = Boolean(isactive);
         }
 
-        const vessel = await Vessel.updateByMMSI(mmsi, { name, image, isActive });
+        const vessel = await Vessel.updateByMMSI(mmsi, { name, image, isactive });
 
         if (!vessel) {
             return res.status(404).json({
