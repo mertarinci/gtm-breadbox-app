@@ -326,7 +326,7 @@ const getPositionsAsGeoJSON = async (req, res) => {
                     status: vessel.status,
                     timestamp: vessel.last_seen ? new Date(vessel.last_seen).toISOString() : null,
                     image: vessel.image,
-                    isActive: vessel.isActive === true || vessel.isactive === true,
+                    isActive: vessel.isActive === true,
                 },
                 geometry: {
                     type: "Point",
