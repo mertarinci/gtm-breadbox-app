@@ -3,6 +3,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 require('dotenv').config();
 
 // Import routes
@@ -19,6 +20,14 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 if (!isDevelopment) {
     app.use(helmet());
 }
+
+// CORS middleware - allow all origins without restrictions
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    credentials: false
+}));
 
 // Cookie parser middleware
 app.use(cookieParser());
